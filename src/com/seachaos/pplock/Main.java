@@ -21,53 +21,6 @@ public class Main {
 		}
 	}
 	
-	public static void cli(final String cmd){
-		new Thread(new Runnable(){
-			@Override
-			public void run() {
-				_cli(cmd);
-			}
-		}).start();
-	}
-	
-	public static void _cli(String cmd){
-		Runtime rt = Runtime.getRuntime();
-		Process proc;
-		try {
-			proc = rt.exec(cmd);
-			final BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-			final StringBuilder sb = new StringBuilder();
-			boolean keepRun = true;
-			while(keepRun){
-				sleep(10);
-				try{
-					new Thread(new Runnable(){
-						@Override
-						public void run() {
-							try {
-								String s = null;
-								while((s = stdInput.readLine())!=null){
-									debug(s);
-									sb.append(s);
-								}
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}						
-					}).start();
-					int code = proc.exitValue();
-					debug("get exit code:" + code);
-					keepRun = false;
-				}catch(Exception e){
-				}
-			}
-			debug("final sb:" + sb.toString());
-		} catch (IOException e) {
-			error(e.toString());
-			e.printStackTrace();
-		}
-		
-	}
 
 	public static void main(String[] args){
 		if(args.length>0){
@@ -86,6 +39,18 @@ public class Main {
 	}
 
 	Main(){
-		cli("java -jar ./test/sleep.jar demo");
+		// do test
+		new PPLock("java -jar ./test/sleep.jar demo", PPLock.OUPUT_MODE_STD, new PPLock.PPLockCallback(){
+			@Override
+			public void onOutput(String msg, StringBuilder sb) {
+				debug("onOutput:" + msg);
+			}
+
+			@Override
+			public void onFinish(int exitCode, StringBuilder sb) {
+				debug("---------");
+				debug("final string:" + sb.toString());
+			}			
+		});
 	}
 }
